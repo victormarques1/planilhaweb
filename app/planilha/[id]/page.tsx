@@ -1,5 +1,5 @@
 import { db } from "@/app/_lib/prisma";
-import NovoRegistro from "../_components/novo_registro";
+import NovoRegistro from "./_components/novo_registro";
 import {
   Table,
   TableBody,
@@ -8,10 +8,11 @@ import {
   TableRow,
 } from "@/app/_components/ui/table";
 import { format } from "date-fns";
+import { PlanilhaFut } from "@prisma/client";
 
 interface PlanilhaProps {
   params: {
-    id?: string;
+    id: string;
   };
 }
 
@@ -27,7 +28,7 @@ const PlanilhaById = async ({ params }: PlanilhaProps) => {
       <div className="mt-4 mx-auto max-w-7xl">
         <h2 className="text-center mb-4">Planilhas</h2>
 
-        <NovoRegistro />
+        <NovoRegistro params={params} />
 
         <div className="overflow-x-auto text-center">
           <Table className="w-full">
@@ -68,12 +69,7 @@ const PlanilhaById = async ({ params }: PlanilhaProps) => {
                       {planilha.resultado}
                     </TableCell>
                   )}
-                  <TableCell>
-                    {(planilha.stake * planilha.odd - planilha.stake).toFixed(
-                      3
-                    )}
-                    u
-                  </TableCell>
+                  <TableCell>{planilha.lucro}u</TableCell>
                 </TableRow>
               ))}
             </TableBody>

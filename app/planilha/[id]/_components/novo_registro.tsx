@@ -8,7 +8,6 @@ import {
   Sheet,
   SheetClose,
   SheetContent,
-  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
@@ -16,9 +15,24 @@ import {
 } from "@/app/_components/ui/sheet";
 import { FilePlus } from "lucide-react";
 import React from "react";
-import { db } from "@/app/_lib/prisma";
+import { addEntrada } from "../_actions/add_entrada";
+import { PlanilhaFut } from "@prisma/client";
+import { Select } from "@/app/_components/ui/select";
+import {
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/_components/ui/select";
 
-const NovoRegistro = async () => {
+interface PlanilhaProps {
+  params: {
+    id: string;
+  };
+}
+
+const NovoRegistro = ({ params }: PlanilhaProps) => {
   const [data, setData] = useState("");
   const [competicao, setCompeticao] = useState("");
   const [mandante, setMandante] = useState("");
@@ -27,40 +41,52 @@ const NovoRegistro = async () => {
   const [stake, setStake] = useState("");
   const [odd, setOdd] = useState("");
   const [resultado, setResultado] = useState("");
-  const lucro = Number(stake) * Number(odd) - Number(stake);
+
+  let lucro = 0;
+  if (resultado === "Certo") {
+    lucro = Number(stake) * Number(odd) - Number(stake);
+  } else {
+    lucro = -stake;
+  }
 
   const salvarRegistroClick = async () => {
     try {
-      await db.planilhaFut.create({
-        data: {
-          id: "003",
-          usuarioId: "001",
-          nome: "Planilha teste post",
-          data: data,
-          competicao: competicao,
-          mandante: mandante,
-          visitante: visitante,
-          metodo: metodo,
-          stake: Number(stake),
-          odd: Number(odd),
-          resultado: resultado,
-          lucro: Number(lucro),
-        },
+      await addEntrada({
+        planilhaId: params.id,
+        data: new Date(data),
+        competicao: competicao,
+        mandante: mandante,
+        visitante: visitante,
+        metodo: metodo,
+        stake: Number(stake),
+        odd: Number(odd),
+        resultado: resultado,
+        lucro: Number(lucro),
       });
+
+      setData("");
+      setCompeticao("");
+      setMandante("");
+      setVisitante("");
+      setMetodo("");
+      setStake("");
+      setOdd("");
+      setResultado("");
+      lucro = 0;
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
   return (
-    <div className="text-center m-4  ">
+    <div className="text-center m-4">
       <Sheet>
         <SheetTrigger asChild>
           <Button variant="outline" className="bg-green-600 text-white">
             Registrar Nova Entrada <FilePlus className="ml-2" size={20} />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left">
+        <SheetContent side="left" className="overflow-x-auto">
           <SheetHeader>
             <SheetTitle>Registrar nova entrada</SheetTitle>
           </SheetHeader>
@@ -128,14 +154,35 @@ const NovoRegistro = async () => {
                 onChange={(e) => setOdd(e.target.value)}
               />
             </div>
+
             <div className="my-2">
               <Label>Resultado</Label>
-              <Input
-                type="text"
-                className="mt-1 max-w-2xl"
-                value={resultado}
-                onChange={(e) => setResultado(e.target.value)}
-              />
+              <Select value={resultado} onValueChange={setResultado}>
+                <SelectTrigger className="mt-1 max-w-2xl">
+                  <SelectValue placeholder="Selecione o resultado da aposta" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem
+                      value="Certo"
+                      className="bg-green-700 focus:bg-green-600 text-white"
+                    >
+                      Certo
+                    </SelectItem>
+                    <SelectItem
+                      value="Errado"
+                      className="bg-red-700 focus:bg-red-600 text-white"
+                    >
+                      Errado
+                    </SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="my-2">
+              <Label>Lucro</Label>
+              <Input type="text" className="mt-1 max-w-2xl" value={lucro} />
             </div>
           </div>
           <SheetFooter>
